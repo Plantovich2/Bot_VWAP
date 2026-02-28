@@ -290,7 +290,7 @@ def trading_loop():
             # COUNTDOWN
             # ======================================================
 
-            print(f"Siguiente actualización en: 180 segundos")
+            print(f"\nSiguiente actualización en: {segundos} segundos\n")
             time.sleep(180)
 
         except Exception as e:
@@ -334,25 +334,16 @@ def logs():
     content = re.sub(r'RSI → .*?</span>', format_rsi, content)
 
     # =========================
-    # EXTRAER Y ORDENAR NIVELES CORRECTAMENTE
+    # ORDENAR 8 NIVELES CONSERVANDO COLORES
     # =========================
 
-    # Buscar todos los niveles tipo "Texto: numero"
-    matches = re.findall(r'([^<>\n:]+):\s*([\d]+\.[\d]+)', content)
+    pattern = re.findall(
+        r'(<span style="color:[^"]+;">)([^:]+):\s*([\d]+\.[\d]+)(</span>)',
+        content
+    )
 
     levels = []
 
-    for name, value in matches:
-        name = name.strip()
-        try:
-            levels.append({
-                "name": name,
-                "value": float(value)
-            })
-        except:
-            pass
-
-    # Filtrar solo los 8 que nos interesan
     keywords = [
         "BTC Actual",
         "Upper1",
@@ -364,27 +355,30 @@ def logs():
         "Lower3"
     ]
 
-    filtered = [
-        lvl for lvl in levels
-        if any(k in lvl["name"] for k in keywords)
-    ]
+    for start, name, value, end in pattern:
+        if any(k in name for k in keywords):
+            try:
+                levels.append({
+                    "value": float(value),
+                    "html": f"{start}{name}: {value}{end}"
+                })
+            except:
+                pass
 
-    if len(filtered) >= 8:
+    if len(levels) >= 8:
 
         # Ordenar mayor a menor
-        ordered = sorted(filtered, key=lambda x: x["value"], reverse=True)
+        levels_sorted = sorted(levels, key=lambda x: x["value"], reverse=True)
 
-        # Reconstruir bloque en columna
-        ordered_block = ""
-        for lvl in ordered:
-            ordered_block += f"{lvl['name']}: {lvl['value']:.2f}<br>"
+        # Construir bloque en columna con colores originales
+        ordered_block = "<br>".join(level["html"] for level in levels_sorted)
 
-        # Eliminar bloque original completo
+        # Reemplazar bloque original completo
         content = re.sub(
-            r'BTC Actual:.*?Lower3.*?\d+\.\d+',
+            r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d]+\.[\d]+\s*){8}',
             ordered_block,
             content,
-            flags=re.DOTALL
+            count=1
         )
         
     html = f"""
@@ -422,6 +416,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
