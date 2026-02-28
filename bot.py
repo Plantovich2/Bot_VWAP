@@ -25,10 +25,12 @@ RESET = "\033[0m"
 # ==========================================================
 # TWILIO CONFIG
 # ==========================================================
-ACCOUNT_SID = "TU_SID"
-AUTH_TOKEN = "TU_TOKEN"
-FROM_WHATSAPP = "whatsapp:+14155238886"
-TO_WHATSAPP = "whatsapp:+5491162590346"
+import os
+
+ACCOUNT_SID = os.environ.get("ACCOUNT_SID")
+AUTH_TOKEN = os.environ.get("AUTH_TOKEN")
+FROM_WHATSAPP = os.environ.get("FROM_WHATSAPP")
+TO_WHATSAPP = os.environ.get("TO_WHATSAPP")
 
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
@@ -206,4 +208,6 @@ def home():
 if __name__ == "__main__":
     thread = threading.Thread(target=trading_loop)
     thread.start()
-    app.run(host="0.0.0.0", port=5000)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
