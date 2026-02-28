@@ -334,6 +334,7 @@ def logs():
         "\033[93m": '<span style="color:#ffd700;">',
         "\033[95m": '<span style="color:#ff79c6;">',
         "\033[96m": '<span style="color:#00e5ff;">',
+        "\033[97m": '<span style="color:#ffffff;">',
         "\033[0m":  "</span>"
     }
 
@@ -433,6 +434,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
