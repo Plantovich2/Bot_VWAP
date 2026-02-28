@@ -189,8 +189,7 @@ def trading_loop():
         try:
             now = dt.now(timezone.utc)
 
-            print("=" * 90)
-            print("🕒", now)
+            print("\n" + "=" * 60 + "\n")
             print("PAR:", SYMBOL)
 
             df_3m = vwap_daily(get_klines("3m"))
@@ -409,6 +408,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
