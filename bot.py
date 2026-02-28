@@ -309,6 +309,27 @@ def home():
 
 import re
 
+ansi_map = {
+    "91": "#ff4c4c",
+    "92": "#00ff88",
+    "93": "#ffd700",
+    "95": "#ff79c6",
+    "96": "#00e5ff",
+    "97": "#ffffff",
+}
+
+def convert_ansi(text):
+    def repl(match):
+        code = match.group(1)
+        if code == "0":
+            return "</span>"
+        if code in ansi_map:
+            return f'<span style="color:{ansi_map[code]};">'
+        return ""
+    return re.sub(r"\033\[(\d+)m", repl, text)
+
+content = convert_ansi(content)
+
 @app.route("/logs")
 def logs():
     content = "".join(log_buffer)
@@ -420,6 +441,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
