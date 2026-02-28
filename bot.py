@@ -335,49 +335,46 @@ def logs():
     content = re.sub(r'RSI → .*?</span>', format_rsi, content)
 
     # =========================
-    # FORMATEO VWAP ORDENADO
+    # FORMATEO VWAP + BTC ORDENADO
     # =========================
-    # =========================
-# FORMATEO VWAP + BTC ORDENADO
-# =========================
 
-# Captura líneas tipo:
-# <span style="color:...">Etiqueta: 12345.67</span>
+    # Captura líneas tipo:
+    # <span style="color:...">Etiqueta: 12345.67</span>
 
-pattern = re.findall(
-    r'(<span style="color:[^"]+;">)([^:]+):\s*([\d\.]+)(</span>)',
-    content
-)
-
-levels = []
-
-for start, name, value, end in pattern:
-    try:
-        levels.append({
-            "value": float(value),
-            "html": f"{start}{name}: {value}{end}"
-        })
-    except:
-        pass
-
-# Necesitamos exactamente 8 niveles
-if len(levels) >= 8:
-
-    # Ordenar mayor a menor
-    levels_sorted = sorted(levels, key=lambda x: x["value"], reverse=True)
-
-    # Construir bloque en columna
-    ordered_block = "<br>".join(level["html"] for level in levels_sorted[:8])
-
-    # Reemplazar solo el primer bloque de niveles encontrado
-    content = re.sub(
-        r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d\.]+\s*){8}',
-        ordered_block,
-        content,
-        count=1
+    pattern = re.findall(
+        r'(<span style="color:[^"]+;">)([^:]+):\s*([\d\.]+)(</span>)',
+        content
     )
 
-    html = f"""
+    levels = []
+
+    for start, name, value, end in pattern:
+        try:
+            levels.append({
+                "value": float(value),
+                "html": f"{start}{name}: {value}{end}"
+            })
+        except:
+            pass
+
+    # Necesitamos exactamente 8 niveles
+    if len(levels) >= 8:
+
+        # Ordenar mayor a menor
+        levels_sorted = sorted(levels, key=lambda x: x["value"], reverse=True)
+
+        # Construir bloque en columna
+        ordered_block = "<br>".join(level["html"] for level in levels_sorted[:8])
+
+        # Reemplazar solo el primer bloque de niveles encontrado
+        content = re.sub(
+            r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d\.]+\s*){8}',
+            ordered_block,
+            content,
+            count=1
+      )
+
+   html = f"""
     <html>
     <head>
         <meta http-equiv="refresh" content="60">
@@ -412,6 +409,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
