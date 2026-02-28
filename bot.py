@@ -313,20 +313,57 @@ def logs():
 
     # === Convertir ANSI a HTML ===
     ansi_to_html = {
-        "\033[91m": '<span style="color:#ff4c4c;">',   # RED
-        "\033[92m": '<span style="color:#00ff88;">',   # GREEN
-        "\033[93m": '<span style="color:#ffd700;">',   # YELLOW
-        "\033[95m": '<span style="color:#ff79c6;">',   # PINK
-        "\033[96m": '<span style="color:#00e5ff;">',   # CYAN
+        "\033[91m": '<span style="color:#ff4c4c;">',
+        "\033[92m": '<span style="color:#00ff88;">',
+        "\033[93m": '<span style="color:#ffd700;">',
+        "\033[95m": '<span style="color:#ff79c6;">',
+        "\033[96m": '<span style="color:#00e5ff;">',
         "\033[0m":  "</span>"
     }
 
     for ansi, html in ansi_to_html.items():
         content = content.replace(ansi, html)
 
-    # eliminar cualquier otro ANSI residual
-    ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-    content = ansi_escape.sub('', content)
+    # =========================
+    # FORMATEO RSI EN COLUMNA
+    # =========================
+    def format_rsi(match):
+        line = match.group(0)
+        parts = line.split("|")
+        return "<br>".join(p.strip() for p in parts)
+
+    content = re.sub(r'RSI → .*?</span>', format_rsi, content)
+
+    # =========================
+    # FORMATEO VWAP ORDENADO
+    # =========================
+    vwap_pattern = re.findall(
+        r'(<span style="color:[^"]+;">)([^:]+):\s*([\d\.]+)(</span>)',
+        content
+    )
+
+    if len(vwap_pattern) >= 7:
+        # Convertir a lista ordenable
+        levels = []
+        for start, name, value, end in vwap_pattern:
+            try:
+                levels.append((float(value), f"{start}{name}: {value}{end}"))
+            except:
+                pass
+
+        # Ordenar mayor a menor
+        levels.sort(reverse=True)
+
+        # Reconstruir bloque ordenado
+        ordered_block = "<br>".join(level[1] for level in levels)
+
+        # Reemplazar bloque original por ordenado
+        content = re.sub(
+            r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d\.]+\s*)+',
+            ordered_block,
+            content,
+            count=1
+        )
 
     html = f"""
     <html>
@@ -341,17 +378,10 @@ def logs():
                 padding: 20px;
                 margin: 0;
             }}
-            .container {{
-                max-width: 1400px;
-                margin: auto;
-            }}
         </style>
     </head>
     <body>
-        <div class="container">
 {content}
-        </div>
-
         <script>
             window.scrollTo(0, document.body.scrollHeight);
         </script>
@@ -360,7 +390,6 @@ def logs():
     """
 
     return html
-    
 # ==========================================================
 # START
 # ==========================================================
@@ -371,6 +400,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
