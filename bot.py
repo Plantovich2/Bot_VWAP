@@ -87,9 +87,8 @@ def get_klines(interval):
 
         data = r.json()
 
-        # ⚠️ Protección contra respuestas inválidas
-        if not isinstance(data, list) or len(data) < 50:
-            print(f"⚠️ Datos insuficientes en {interval}")
+        if not isinstance(data, list):
+            print("⚠️ Binance error:", data)
             return None
 
         df = pd.DataFrame(data, columns=[
@@ -221,3 +220,4 @@ def run_bot():
 if __name__ == "__main__":
     threading.Thread(target=run_server).start()
     threading.Thread(target=run_bot).start()
+
