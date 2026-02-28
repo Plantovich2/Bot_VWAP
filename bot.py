@@ -342,12 +342,11 @@ def logs():
         "\033[93m": '<span style="color:#ffd700;">',
         "\033[95m": '<span style="color:#ff79c6;">',
         "\033[96m": '<span style="color:#00e5ff;">',
-        "\033[97m": '<span style="color:#ffffff;">',
         "\033[0m":  "</span>"
     }
 
     for ansi, html in ansi_to_html.items():
-        content = content.replace("\n", "<br>")
+        content = content.replace(ansi, html)
 
     # =========================
     # FORMATEO RSI EN COLUMNA
@@ -360,16 +359,25 @@ def logs():
     content = re.sub(r'RSI → .*?</span>', format_rsi, content)
 
     # =========================
-    # ORDENAR 8 NIVELES CONSERVANDO COLORES
+    # EXTRAER Y ORDENAR NIVELES CORRECTAMENTE
     # =========================
 
-    pattern = re.findall(
-        r'(<span style="color:[^"]+;">)([^:]+):\s*([\d]+\.[\d]+)(</span>)',
-        content
-    )
+    # Buscar todos los niveles tipo "Texto: numero"
+    matches = re.findall(r'([^<>\n:]+):\s*([\d]+\.[\d]+)', content)
 
     levels = []
 
+    for name, value in matches:
+        name = name.strip()
+        try:
+            levels.append({
+                "name": name,
+                "value": float(value)
+            })
+        except:
+            pass
+
+    # Filtrar solo los 8 que nos interesan
     keywords = [
         "BTC Actual",
         "Upper1",
@@ -381,30 +389,27 @@ def logs():
         "Lower3"
     ]
 
-    for start, name, value, end in pattern:
-        if any(k in name for k in keywords):
-            try:
-                levels.append({
-                    "value": float(value),
-                    "html": f"{start}{name}: {value}{end}"
-                })
-            except:
-                pass
+    filtered = [
+        lvl for lvl in levels
+        if any(k in lvl["name"] for k in keywords)
+    ]
 
-    if len(levels) >= 8:
+    if len(filtered) >= 8:
 
         # Ordenar mayor a menor
-        levels_sorted = sorted(levels, key=lambda x: x["value"], reverse=True)
+        ordered = sorted(filtered, key=lambda x: x["value"], reverse=True)
 
-        # Construir bloque en columna con colores originales
-        ordered_block = "<br>".join(level["html"] for level in levels_sorted)
+        # Reconstruir bloque en columna
+        ordered_block = ""
+        for lvl in ordered:
+            ordered_block += f"{lvl['name']}: {lvl['value']:.2f}<br>"
 
-        # Reemplazar bloque original completo
+        # Eliminar bloque original completo
         content = re.sub(
-            r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d]+\.[\d]+\s*){8}',
+            r'BTC Actual:.*?Lower3.*?\d+\.\d+',
             ordered_block,
             content,
-            count=1
+            flags=re.DOTALL
         )
         
     html = f"""
@@ -442,6 +447,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
