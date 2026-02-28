@@ -15,13 +15,26 @@ from collections import deque
 app = Flask(__name__)
 
 # ==========================================================
-# LOG BUFFER PARA WEB
+# LOG CAPTURE ROBUSTO
 # ==========================================================
-log_buffer = deque(maxlen=300)
+import sys
+from collections import deque
 
-def log(msg):
-    print(msg)
-    log_buffer.append(str(msg))
+log_buffer = deque(maxlen=1000)  # guarda últimos 1000 prints
+
+class DualOutput:
+    def __init__(self, original):
+        self.original = original
+
+    def write(self, text):
+        self.original.write(text)
+        if text.strip() != "":
+            log_buffer.append(text)
+
+    def flush(self):
+        self.original.flush()
+
+sys.stdout = DualOutput(sys.stdout)
 
 # ==========================================================
 # COLORES ANSI
@@ -294,9 +307,9 @@ def home():
     return "VWAP BOT RUNNING"
 
 @app.route("/logs")
-def view_logs():
-    return "<pre>" + "\n".join(log_buffer) + "</pre>"
-
+def logs():
+    return "<pre>" + "".join(log_buffer) + "</pre>"
+    
 # ==========================================================
 # START
 # ==========================================================
@@ -307,6 +320,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
