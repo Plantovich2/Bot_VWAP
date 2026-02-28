@@ -39,6 +39,8 @@ class DualOutput:
 
     def flush(self):
         self.original.flush()
+        
+sys.stdout = DualOutput(sys.stdout)
 
 # ==========================================================
 # COLORES ANSI
@@ -334,7 +336,7 @@ def get_logs():
         </style>
     </head>
     <body>
-        <h2>📊 BOT LOG EN VIVO</h2>
+        <h2>Running...</h2>
         <pre>{''.join(log_buffer)}</pre>
     </body>
     </html>
@@ -350,6 +352,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
