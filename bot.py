@@ -34,16 +34,11 @@ class DualOutput:
         # eliminar códigos ANSI completos
         clean = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', text)
 
-        # eliminar restos raros si quedaran
-        clean = clean.replace('[0m', '\n')
-
-        if clean.strip() != "":
-            log_buffer.append(clean)
+        # guardar TODO, incluyendo saltos de línea
+        log_buffer.append(clean)
 
     def flush(self):
         self.original.flush()
-
-sys.stdout = DualOutput(sys.stdout)
 
 # ==========================================================
 # COLORES ANSI
@@ -355,6 +350,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
