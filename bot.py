@@ -305,9 +305,15 @@ def trading_loop():
 def home():
     return "VWAP BOT RUNNING"
 
+import re
+
 @app.route("/logs")
 def logs():
     content = "".join(log_buffer)
+
+    # eliminar códigos ANSI
+    ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+    clean_content = ansi_escape.sub('', content)
 
     html = f"""
     <html>
@@ -324,7 +330,7 @@ def logs():
         </style>
     </head>
     <body>
-{content}
+{clean_content}
     </body>
     </html>
     """
@@ -340,6 +346,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
