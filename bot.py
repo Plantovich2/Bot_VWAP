@@ -304,7 +304,28 @@ def home():
 
 @app.route("/logs")
 def logs():
-    return "<pre>" + "".join(log_buffer) + "</pre>"
+    content = "".join(log_buffer)
+
+    html = f"""
+    <html>
+    <head>
+        <meta http-equiv="refresh" content="3">
+        <style>
+            body {{
+                background-color: #0d1117;
+                color: #00ff88;
+                font-family: monospace;
+                white-space: pre-wrap;
+                padding: 20px;
+            }}
+        </style>
+    </head>
+    <body>
+{content}
+    </body>
+    </html>
+    """
+    return html
     
 # ==========================================================
 # START
@@ -316,6 +337,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
