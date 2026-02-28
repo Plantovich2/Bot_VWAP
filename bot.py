@@ -323,7 +323,7 @@ def get_logs():
     return f"""
     <html>
     <head>
-        <meta http-equiv="refresh" content="5">
+        <meta http-equiv="refresh" content="60">
         <style>
             body {{
                 background-color: #000;
@@ -355,6 +355,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
