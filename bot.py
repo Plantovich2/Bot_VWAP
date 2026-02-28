@@ -58,11 +58,7 @@ def send_startup_message():
 # ==========================================================
 # CONFIG
 # ==========================================================
-SYMBOL = "BTCUSDT"
-BASE_URL = "https://api.binance.com/api/v3/klines"
-TICKER_URL = "https://api.binance.com/api/v3/ticker/price"
-LIMIT = 500
-
+SYMBOL = "BTC-USDT-SWAP"
 position = None
 entry_price = None
 
@@ -75,42 +71,63 @@ def trading_hours():
     return (1 * 60 + 50) <= minutes <= (23 * 60 + 20)
 
 # ==========================================================
-# DATA SAFE
+# OKX DATA
 # ==========================================================
 def get_klines(interval):
     try:
-        r = requests.get(BASE_URL, params={
-            "symbol": SYMBOL,
-            "interval": interval,
-            "limit": LIMIT
-        }, timeout=10)
+        url = "https://www.okx.com/api/v5/market/candles"
+        params = {
+            "instId": SYMBOL,
+            "bar": interval,
+            "limit": 200
+        }
 
+        r = requests.get(url, params=params, timeout=10)
         data = r.json()
 
-        if not isinstance(data, list):
-            print("⚠️ Binance error:", data)
+        if "data" not in data:
+            print("⚠️ OKX error:", data)
             return None
 
-        df = pd.DataFrame(data, columns=[
-            "time","open","high","low","close","volume",
-            "_","_","_","_","_","_"
+        candles = pd.DataFrame(data["data"], columns=[
+            "timestamp", "open", "high", "low", "close",
+            "volume", "volCcy", "volCcyQuote", "confirm"
         ])
 
-        df["time"] = pd.to_datetime(df["time"], unit="ms", utc=True)
-        df[["open","high","low","close","volume"]] = \
-            df[["open","high","low","close","volume"]].astype(float)
+        candles = candles.iloc[::-1]
 
-        return df
+        candles["time"] = pd.to_datetime(
+            candles["timestamp"].astype(int),
+            unit="ms",
+            utc=True
+        )
+
+        candles[["open","high","low","close","volume"]] = \
+            candles[["open","high","low","close","volume"]].astype(float)
+
+        return candles[["time","open","high","low","close","volume"]]
 
     except Exception as e:
-        print("KLINES ERROR:", e)
+        print("OKX ERROR:", e)
         return None
+
 
 def get_current_price():
     try:
-        r = requests.get(TICKER_URL, params={"symbol": SYMBOL}, timeout=10)
-        return float(r.json()["price"])
-    except:
+        url = "https://www.okx.com/api/v5/market/ticker"
+        params = {"instId": SYMBOL}
+
+        r = requests.get(url, params=params, timeout=10)
+        data = r.json()
+
+        if "data" not in data:
+            print("⚠️ OKX ticker error:", data)
+            return None
+
+        return float(data["data"][0]["last"])
+
+    except Exception as e:
+        print("Ticker ERROR:", e)
         return None
 
 # ==========================================================
@@ -166,17 +183,12 @@ def run_bot():
             print("PAR:", SYMBOL)
 
             df_3m = get_klines("3m")
-            if df_3m is None:
+            if df_3m is None or len(df_3m) < 3:
+                print("⚠️ Datos insuficientes 3m")
                 time.sleep(30)
                 continue
 
             df_3m = vwap_daily(df_3m)
-
-            # ⚠️ Protección crítica
-            if len(df_3m) < 3:
-                print("⚠️ No hay suficientes velas")
-                time.sleep(30)
-                continue
 
             last = df_3m.iloc[-1]
             prev = df_3m.iloc[-2]
@@ -220,4 +232,3 @@ def run_bot():
 if __name__ == "__main__":
     threading.Thread(target=run_server).start()
     threading.Thread(target=run_bot).start()
-
