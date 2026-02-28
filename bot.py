@@ -207,14 +207,14 @@ def trading_loop():
             print(f"BTC Actual: {price:.2f}\n")
             print(f"VWAP: {last['vwap']:.2f}\n")
 
-            print(f"{PINK}Upper1 (SH entry): {last['upper1']:.2f}{RESET} | "
-                  f"{RED}Upper2: {last['upper2']:.2f}{RESET} | "
-                  f"{RED}Upper3 (SL Short): {last['upper3']:.2f}{RESET}")
-
-            print(f"{CYAN}Lower1 (LG entry): {last['lower1']:.2f}{RESET} | "
-                  f"{GREEN}Lower2: {last['lower2']:.2f}{RESET} | "
-                  f"{GREEN}Lower3 (SL Long): {last['lower3']:.2f}{RESET}")
-
+            print(f"{PINK}Upper1 (SH entry): {last['upper1']:.2f}\n")
+            print(f"{RED}Upper2: {last['upper2']:.2f}\n")
+            print(f"{RED}Upper3 (SL Short): {last['upper3']:.2f}\n")
+            
+            print(f"{CYAN}Lower1 (LG entry): {last['lower1']:.2f}\n")
+            print(f"{GREEN}Lower2: {last['lower2']:.2f}\n")
+            print(f"{GREEN}Lower3 (SL Long): {last['lower3']:.2f}\n")
+            
             # =========================
             # ORDENAR 8 NIVELES EN ORIGEN
             # =========================
@@ -442,6 +442,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
