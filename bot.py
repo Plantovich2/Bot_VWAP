@@ -304,117 +304,7 @@ def trading_loop():
 # ==========================================================
 # ROUTES
 # ==========================================================
-@app.route("/")
-def home():
-    return "VWAP BOT RUNNING"
 
-
-@app.route("/logs")
-def logs():
-    content = "".join(log_buffer)
-
-    # === Convertir ANSI a HTML ===
-    ansi_to_html = {
-        "\033[91m": '<span style="color:#ff4c4c;">',
-        "\033[92m": '<span style="color:#00ff88;">',
-        "\033[93m": '<span style="color:#ffd700;">',
-        "\033[95m": '<span style="color:#ff79c6;">',
-        "\033[96m": '<span style="color:#00e5ff;">',
-        "\033[0m":  "</span>"
-    }
-
-    for ansi, html in ansi_to_html.items():
-        content = content.replace(ansi, html)
-
-    # =========================
-    # FORMATEO RSI EN COLUMNA
-    # =========================
-    def format_rsi(match):
-        line = match.group(0)
-        parts = line.split("|")
-        return "<br>".join(p.strip() for p in parts)
-
-    content = re.sub(r'RSI → .*?</span>', format_rsi, content)
-
-    # =========================
-    # EXTRAER Y ORDENAR NIVELES CORRECTAMENTE
-    # =========================
-
-    # Buscar todos los niveles tipo "Texto: numero"
-    matches = re.findall(r'([^<>\n:]+):\s*([\d]+\.[\d]+)', content)
-
-    levels = []
-
-    for name, value in matches:
-        name = name.strip()
-        try:
-            levels.append({
-                "name": name,
-                "value": float(value)
-            })
-        except:
-            pass
-
-    # Filtrar solo los 8 que nos interesan
-    keywords = [
-        "BTC Actual",
-        "Upper1",
-        "Upper2",
-        "Upper3",
-        "VWAP",
-        "Lower1",
-        "Lower2",
-        "Lower3"
-    ]
-
-    filtered = [
-        lvl for lvl in levels
-        if any(k in lvl["name"] for k in keywords)
-    ]
-
-    if len(filtered) >= 8:
-
-        # Ordenar mayor a menor
-        ordered = sorted(filtered, key=lambda x: x["value"], reverse=True)
-
-        # Reconstruir bloque en columna
-        ordered_block = ""
-        for lvl in ordered:
-            ordered_block += f"{lvl['name']}: {lvl['value']:.2f}<br>"
-
-        # Eliminar bloque original completo
-        content = re.sub(
-            r'BTC Actual:.*?Lower3.*?\d+\.\d+',
-            ordered_block,
-            content,
-            flags=re.DOTALL
-        )
-        
-    html = f"""
-    <html>
-    <head>
-        <meta http-equiv="refresh" content="60">
-        <style>
-            body {{
-                background-color: #0d1117;
-                color: #e6edf3;
-                font-family: monospace;
-                white-space: pre-wrap;
-                padding: 20px;
-                margin: 0;
-            }}
-        </style>
-    </head>
-    <body>
-{content}
-        <script>
-            window.scrollTo(0, document.body.scrollHeight);
-        </script>
-    </body>
-    </html>
-    """
-
-    return html
 # ==========================================================
 # START
 # ==========================================================
@@ -425,6 +315,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
