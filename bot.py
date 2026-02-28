@@ -215,6 +215,32 @@ def trading_loop():
                   f"{GREEN}Lower2: {last['lower2']:.2f}{RESET} | "
                   f"{GREEN}Lower3 (SL Long): {last['lower3']:.2f}{RESET}")
 
+            # =========================
+            # ORDENAR 8 NIVELES EN ORIGEN
+            # =========================
+
+            levels = [
+                (f"{RED}Upper3 (SL Short): {last['upper3']:.2f}{RESET}", last['upper3']),
+                (f"{RED}Upper2: {last['upper2']:.2f}{RESET}", last['upper2']),
+                (f"{PINK}Upper1 (SH entry): {last['upper1']:.2f}{RESET}", last['upper1']),
+                (f"{WHITE}BTC Actual: {price:.2f}{RESET}", price),
+                (f"{YELLOW}VWAP: {last['vwap']:.2f}{RESET}", last['vwap']),
+                (f"{CYAN}Lower1 (LG entry): {last['lower1']:.2f}{RESET}", last['lower1']),
+                (f"{GREEN}Lower2: {last['lower2']:.2f}{RESET}", last['lower2']),
+                (f"{GREEN}Lower3 (SL Long): {last['lower3']:.2f}{RESET}", last['lower3']),
+            ]
+
+            # Ordenar mayor a menor
+            levels_sorted = sorted(levels, key=lambda x: x[1], reverse=True)
+
+            print()  # línea en blanco
+
+            for text, _ in levels_sorted:
+                print(text)
+
+            print()  # línea en blanco
+
+            
             # ======================================================
             # CIERRE AUTOMÁTICO 00:00 UTC
             # ======================================================
@@ -416,6 +442,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
