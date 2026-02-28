@@ -293,21 +293,7 @@ def trading_loop():
                     intraday_trades.append(f"LONG cerrado | {pnl:.2f}%")
                     position = None
 
-            # ======================================================
-            # TRADES INTRADIARIOS
-            # ======================================================
-            print("\nTRADES INTRADIARIOS:")
-            if intraday_trades:
-                for t in intraday_trades:
-                    print("-", t)
-            else:
-                print("Sin trades hoy.")
-
-            # ======================================================
-            # COUNTDOWN
-            # ======================================================
-
-            print(f"\nSiguiente actualización en: 180 segundos\n")
+            
             time.sleep(180)
 
         except Exception as e:
@@ -434,6 +420,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
