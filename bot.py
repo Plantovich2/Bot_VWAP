@@ -277,7 +277,7 @@ def trading_loop():
             # ======================================================
             # COUNTDOWN
             # ======================================================
-            for i in range(180, 0, -1):
+            for i in range(180, 0, -90):
                 print(f"Siguiente actualización en: {i} segundos", end="\r")
                 time.sleep(30)
 
@@ -303,4 +303,5 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
