@@ -44,8 +44,6 @@ def send_whatsapp(msg):
     except Exception as e:
         print("Twilio ERROR:", e)
 
-send_whatsapp("✅ VWAP alerts running")
-
 # ==========================================================
 # CONFIG
 # ==========================================================
@@ -212,3 +210,4 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
