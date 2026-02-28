@@ -334,45 +334,59 @@ def logs():
     content = re.sub(r'RSI → .*?</span>', format_rsi, content)
 
     # =========================
-    # FORMATEO VWAP + BTC ORDENADO
+    # EXTRAER Y ORDENAR NIVELES CORRECTAMENTE
     # =========================
 
-    # Captura líneas tipo:
-    # <span style="color:...">Etiqueta: 12345.67</span>
-
-    pattern = re.findall(
-        r'(<span style="color:[^"]+;">)([^:]+):\s*([\d\.]+)(</span>)',
-        content
-    )
+    # Buscar todos los niveles tipo "Texto: numero"
+    matches = re.findall(r'([^<>\n:]+):\s*([\d]+\.[\d]+)', content)
 
     levels = []
 
-    for start, name, value, end in pattern:
+    for name, value in matches:
+        name = name.strip()
         try:
             levels.append({
-                "value": float(value),
-                "html": f"{start}{name}: {value}{end}"
+                "name": name,
+                "value": float(value)
             })
         except:
             pass
 
-    # Necesitamos exactamente 8 niveles
-    if len(levels) >= 8:
+    # Filtrar solo los 8 que nos interesan
+    keywords = [
+        "BTC Actual",
+        "Upper1",
+        "Upper2",
+        "Upper3",
+        "VWAP",
+        "Lower1",
+        "Lower2",
+        "Lower3"
+    ]
+
+    filtered = [
+        lvl for lvl in levels
+        if any(k in lvl["name"] for k in keywords)
+    ]
+
+    if len(filtered) >= 8:
 
         # Ordenar mayor a menor
-        levels_sorted = sorted(levels, key=lambda x: x["value"], reverse=True)
+        ordered = sorted(filtered, key=lambda x: x["value"], reverse=True)
 
-        # Construir bloque en columna
-        ordered_block = "<br>".join(level["html"] for level in levels_sorted[:8])
+        # Reconstruir bloque en columna
+        ordered_block = ""
+        for lvl in ordered:
+            ordered_block += f"{lvl['name']}: {lvl['value']:.2f}<br>"
 
-        # Reemplazar solo el primer bloque de niveles encontrado
+        # Eliminar bloque original completo
         content = re.sub(
-            r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d\.]+\s*){8}',
+            r'BTC Actual:.*?Lower3.*?\d+\.\d+',
             ordered_block,
             content,
-            count=1
+            flags=re.DOTALL
         )
-
+        
     html = f"""
     <html>
     <head>
@@ -408,6 +422,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
