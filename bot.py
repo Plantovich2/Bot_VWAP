@@ -39,13 +39,15 @@ sys.stdout = DualOutput(sys.stdout)
 # ==========================================================
 # COLORES ANSI
 # ==========================================================
+
 RED = "\033[91m"
 GREEN = "\033[92m"
+YELLOW = "\033[93m"
 PINK = "\033[95m"
 CYAN = "\033[96m"
-YELLOW = "\033[93m"
-RESET = "\033[0m"
 WHITE = "\033[97m"
+RESET = "\033[0m"
+
 
 # ==========================================================
 # TWILIO CONFIG (ENV)
@@ -205,43 +207,31 @@ def trading_loop():
             rsi_4h = rsi_tv(get_klines("4h")["close"]).iloc[-1]
 
             print(f"{YELLOW}RSI 4H: {rsi_4h:.2f} | 1H: {rsi_1h:.2f} | 15m: {rsi_15m:.2f} | 5m: {rsi_5m:.2f} | 3m: {rsi_3m:.2f}{RESET}\n")
-            print(f"BTC Actual: {price:.2f}\n")
-            print(f"VWAP: {last['vwap']:.2f}\n")
 
-            print(f"{PINK}Upper1 (SH entry): {last['upper1']:.2f}\n")
-            print(f"{RED}Upper2: {last['upper2']:.2f}\n")
-            print(f"{RED}Upper3 (SL Short): {last['upper3']:.2f}\n")
-            
-            print(f"{CYAN}Lower1 (LG entry): {last['lower1']:.2f}\n")
-            print(f"{GREEN}Lower2: {last['lower2']:.2f}\n")
-            print(f"{GREEN}Lower3 (SL Long): {last['lower3']:.2f}\n")
-            
             # =========================
-            # ORDENAR 8 NIVELES EN ORIGEN
+            # ORDENAR E IMPRIMIR 8 NIVELES
             # =========================
 
             levels = [
-                (f"{RED}Upper3 (SL Short): {last['upper3']:.2f}{RESET}", last['upper3']),
-                (f"{RED}Upper2: {last['upper2']:.2f}{RESET}", last['upper2']),
-                (f"{PINK}Upper1 (SH entry): {last['upper1']:.2f}{RESET}", last['upper1']),
-                (f"{WHITE}BTC Actual: {price:.2f}{RESET}", price),
-                (f"{YELLOW}VWAP: {last['vwap']:.2f}{RESET}", last['vwap']),
-                (f"{CYAN}Lower1 (LG entry): {last['lower1']:.2f}{RESET}", last['lower1']),
-                (f"{GREEN}Lower2: {last['lower2']:.2f}{RESET}", last['lower2']),
-                (f"{GREEN}Lower3 (SL Long): {last['lower3']:.2f}{RESET}", last['lower3']),
+                ("Upper3 (SL Short)", last['upper3'], RED),
+                ("Upper2", last['upper2'], RED),
+                ("Upper1 (SH entry)", last['upper1'], PINK),
+                ("BTC Actual", price, WHITE),
+                ("VWAP", last['vwap'], YELLOW),
+                ("Lower1 (LG entry)", last['lower1'], CYAN),
+                ("Lower2", last['lower2'], GREEN),
+                ("Lower3 (SL Long)", last['lower3'], GREEN),
             ]
 
             # Ordenar mayor a menor
             levels_sorted = sorted(levels, key=lambda x: x[1], reverse=True)
 
-            print()  # línea en blanco
+            print()  # espacio antes
 
-            for text, _ in levels_sorted:
-                print(text)
+            for name, value, color in levels_sorted:
+                print(f"{color}{name}: {value:.2f}{RESET}")
 
-            print()  # línea en blanco
-
-            
+            print()  # espacio después
             # ======================================================
             # CIERRE AUTOMÁTICO 00:00 UTC
             # ======================================================
@@ -443,6 +433,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
