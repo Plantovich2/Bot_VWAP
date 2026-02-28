@@ -374,7 +374,7 @@ def logs():
             count=1
         )
 
-   html = f"""
+    html = f"""
     <html>
     <head>
         <meta http-equiv="refresh" content="60">
@@ -409,6 +409,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
