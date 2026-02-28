@@ -213,14 +213,14 @@ def trading_loop():
             # =========================
 
             levels = [
-                ("Upper3 (SL Short)", last['upper3'], RED),
+                ("Upper3", last['upper3'], RED),
                 ("Upper2", last['upper2'], RED),
-                ("Upper1 (SH entry)", last['upper1'], PINK),
+                ("Upper1", last['upper1'], PINK),
                 ("BTC Actual", price, WHITE),
                 ("VWAP", last['vwap'], YELLOW),
-                ("Lower1 (LG entry)", last['lower1'], CYAN),
+                ("Lower1", last['lower1'], CYAN),
                 ("Lower2", last['lower2'], GREEN),
-                ("Lower3 (SL Long)", last['lower3'], GREEN),
+                ("Lower3", last['lower3'], GREEN),
             ]
 
             # Ordenar mayor a menor
@@ -434,6 +434,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
