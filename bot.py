@@ -311,29 +311,54 @@ import re
 def logs():
     content = "".join(log_buffer)
 
-    # eliminar códigos ANSI
+    # === Convertir ANSI a HTML ===
+    ansi_to_html = {
+        "\033[91m": '<span style="color:#ff4c4c;">',   # RED
+        "\033[92m": '<span style="color:#00ff88;">',   # GREEN
+        "\033[93m": '<span style="color:#ffd700;">',   # YELLOW
+        "\033[95m": '<span style="color:#ff79c6;">',   # PINK
+        "\033[96m": '<span style="color:#00e5ff;">',   # CYAN
+        "\033[0m":  "</span>"
+    }
+
+    for ansi, html in ansi_to_html.items():
+        content = content.replace(ansi, html)
+
+    # eliminar cualquier otro ANSI residual
     ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-    clean_content = ansi_escape.sub('', content)
+    content = ansi_escape.sub('', content)
 
     html = f"""
     <html>
     <head>
-        <meta http-equiv="refresh" content="3">
+        <meta http-equiv="refresh" content="60">
         <style>
             body {{
                 background-color: #0d1117;
-                color: #00ff88;
+                color: #e6edf3;
                 font-family: monospace;
                 white-space: pre-wrap;
                 padding: 20px;
+                margin: 0;
+            }}
+            .container {{
+                max-width: 1400px;
+                margin: auto;
             }}
         </style>
     </head>
     <body>
-{clean_content}
+        <div class="container">
+{content}
+        </div>
+
+        <script>
+            window.scrollTo(0, document.body.scrollHeight);
+        </script>
     </body>
     </html>
     """
+
     return html
     
 # ==========================================================
@@ -346,6 +371,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
