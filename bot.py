@@ -305,6 +305,23 @@ def trading_loop():
 # ROUTES
 # ==========================================================
 
+@app.route("/")
+def home():
+    return "<h2>Bot funcionando</h2><p>Ir a <a href='/logs'>/logs</a> para ver logs</p>"
+
+@app.route("/logs")
+def get_logs():
+    return f"""
+    <html>
+    <head>
+        <meta http-equiv="refresh" content="5">
+    </head>
+    <body>
+        <pre>{''.join(log_buffer)}</pre>
+    </body>
+    </html>
+    """
+
 # ==========================================================
 # START
 # ==========================================================
@@ -315,6 +332,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
