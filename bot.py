@@ -1,12 +1,14 @@
 # ==========================================================
 # IMPORTS
 # ==========================================================
+import sys
 import time
 import requests
 import pandas as pd
 import numpy as np
 import threading
 import os
+import re
 from datetime import datetime as dt, timezone
 from flask import Flask
 from twilio.rest import Client
@@ -20,7 +22,7 @@ app = Flask(__name__)
 import sys
 from collections import deque
 
-log_buffer = deque(maxlen=1000)  # guarda últimos 1000 prints
+log_buffer = deque(maxlen=1000)
 
 class DualOutput:
     def __init__(self, original):
@@ -28,8 +30,15 @@ class DualOutput:
 
     def write(self, text):
         self.original.write(text)
-        if text.strip() != "":
-            log_buffer.append(text)
+
+        # eliminar códigos ANSI completos
+        clean = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', text)
+
+        # eliminar restos raros si quedaran
+        clean = clean.replace('[0m', '\n')
+
+        if clean.strip() != "":
+            log_buffer.append(clean)
 
     def flush(self):
         self.original.flush()
@@ -315,8 +324,22 @@ def get_logs():
     <html>
     <head>
         <meta http-equiv="refresh" content="5">
+        <style>
+            body {{
+                background-color: #000;
+                color: #fff;
+                font-family: monospace;
+                padding: 20px;
+            }}
+            pre {{
+                white-space: pre-wrap;
+                font-size: 14px;
+                line-height: 1.4;
+            }}
+        </style>
     </head>
     <body>
+        <h2>📊 BOT LOG EN VIVO</h2>
         <pre>{''.join(log_buffer)}</pre>
     </body>
     </html>
@@ -332,6 +355,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
