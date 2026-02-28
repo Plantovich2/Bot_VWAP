@@ -6,39 +6,29 @@ import requests
 import pandas as pd
 import numpy as np
 import threading
-import os
-import sys
-
 from datetime import datetime as dt, timezone
-from twilio.rest import Client
 from flask import Flask
+from twilio.rest import Client
 
-sys.stdout.reconfigure(line_buffering=True)
-
-# ==========================================================
-# FLASK WEB SERVER (Render Free)
-# ==========================================================
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "VWAP Bot activo 🚀"
-
-@app.route("/status")
-def status():
-    return "Bot corriendo correctamente"
-
-def run_server():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+# ==========================================================
+# COLORES ANSI
+# ==========================================================
+RED = "\033[91m"
+GREEN = "\033[92m"
+PINK = "\033[95m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
 
 # ==========================================================
 # TWILIO CONFIG
 # ==========================================================
-ACCOUNT_SID = os.environ.get("ACCOUNT_SID")
-AUTH_TOKEN = os.environ.get("AUTH_TOKEN")
-FROM_WHATSAPP = os.environ.get("FROM_WHATSAPP")
-TO_WHATSAPP = os.environ.get("TO_WHATSAPP")
+ACCOUNT_SID = "TU_SID"
+AUTH_TOKEN = "TU_TOKEN"
+FROM_WHATSAPP = "whatsapp:+14155238886"
+TO_WHATSAPP = "whatsapp:+5491162590346"
 
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
@@ -52,15 +42,18 @@ def send_whatsapp(msg):
     except Exception as e:
         print("Twilio ERROR:", e)
 
-def send_startup_message():
-    send_whatsapp("✅ VWAP alerts running")
+send_whatsapp("✅ VWAP alerts running")
 
 # ==========================================================
 # CONFIG
 # ==========================================================
-SYMBOL = "BTC-USDT-SWAP"
+SYMBOL = "BTC-USDT"
+LIMIT = 500
+
 position = None
 entry_price = None
+last_forced_close_date = None
+intraday_trades = []
 
 # ==========================================================
 # CONTROL HORARIO
@@ -68,70 +61,54 @@ entry_price = None
 def trading_hours():
     now = dt.now(timezone.utc)
     minutes = now.hour * 60 + now.minute
-    return (1 * 60 + 50) <= minutes <= (23 * 60 + 20)
+    start = 1 * 60 + 50
+    end = 23 * 60 + 20
+    return start <= minutes <= end
 
 # ==========================================================
-# OKX DATA
+# DATA (OKX)
 # ==========================================================
 def get_klines(interval):
-    try:
-        url = "https://www.okx.com/api/v5/market/candles"
-        params = {
-            "instId": SYMBOL,
-            "bar": interval,
-            "limit": 200
-        }
 
-        r = requests.get(url, params=params, timeout=10)
-        data = r.json()
+    interval_map = {
+        "3m": "3m",
+        "5m": "5m",
+        "15m": "15m",
+        "1h": "1H",
+        "4h": "4H"
+    }
 
-        if "data" not in data:
-            print("⚠️ OKX error:", data)
-            return None
+    url = "https://www.okx.com/api/v5/market/candles"
+    params = {
+        "instId": SYMBOL,
+        "bar": interval_map[interval],
+        "limit": LIMIT
+    }
 
-        candles = pd.DataFrame(data["data"], columns=[
-            "timestamp", "open", "high", "low", "close",
-            "volume", "volCcy", "volCcyQuote", "confirm"
-        ])
+    r = requests.get(url, params=params)
+    data = r.json()["data"]
 
-        candles = candles.iloc[::-1]
+    df = pd.DataFrame(data, columns=[
+        "time","open","high","low","close","volume",
+        "_","_","_"
+    ])
 
-        candles["time"] = pd.to_datetime(
-            candles["timestamp"].astype(int),
-            unit="ms",
-            utc=True
-        )
+    df["time"] = pd.to_datetime(df["time"].astype(int), unit="ms", utc=True)
+    df[["open","high","low","close","volume"]] = \
+        df[["open","high","low","close","volume"]].astype(float)
 
-        candles[["open","high","low","close","volume"]] = \
-            candles[["open","high","low","close","volume"]].astype(float)
+    df = df.sort_values("time")
 
-        return candles[["time","open","high","low","close","volume"]]
-
-    except Exception as e:
-        print("OKX ERROR:", e)
-        return None
-
+    return df
 
 def get_current_price():
-    try:
-        url = "https://www.okx.com/api/v5/market/ticker"
-        params = {"instId": SYMBOL}
-
-        r = requests.get(url, params=params, timeout=10)
-        data = r.json()
-
-        if "data" not in data:
-            print("⚠️ OKX ticker error:", data)
-            return None
-
-        return float(data["data"][0]["last"])
-
-    except Exception as e:
-        print("Ticker ERROR:", e)
-        return None
+    url = "https://www.okx.com/api/v5/market/ticker"
+    params = {"instId": SYMBOL}
+    r = requests.get(url, params=params)
+    return float(r.json()["data"][0]["last"])
 
 # ==========================================================
-# RSI
+# RSI WILDER
 # ==========================================================
 def rsi_tv(series, length=14):
     delta = series.diff()
@@ -143,7 +120,7 @@ def rsi_tv(series, length=14):
     return 100 - (100 / (1 + rs))
 
 # ==========================================================
-# VWAP
+# VWAP + BANDAS
 # ==========================================================
 def vwap_daily(df):
     df = df.copy()
@@ -163,62 +140,52 @@ def vwap_daily(df):
     df["dev"] = np.sqrt(variance)
 
     df["upper1"] = df["vwap"] + 1.28 * df["dev"]
+    df["upper2"] = df["vwap"] + 2.01 * df["dev"]
+    df["upper3"] = df["vwap"] + 2.51 * df["dev"]
+
     df["lower1"] = df["vwap"] - 1.28 * df["dev"]
+    df["lower2"] = df["vwap"] - 2.01 * df["dev"]
+    df["lower3"] = df["vwap"] - 2.51 * df["dev"]
 
     return df
 
 # ==========================================================
-# LOOP PRINCIPAL
+# LOOP PRINCIPAL EN THREAD (Render-friendly)
 # ==========================================================
-def run_bot():
-    global position, entry_price
+def trading_loop():
 
-    send_startup_message()
+    global position, entry_price, last_forced_close_date, intraday_trades
 
     while True:
         try:
             now = dt.now(timezone.utc)
+
             print("=" * 90)
             print("🕒", now)
             print("PAR:", SYMBOL)
 
-            df_3m = get_klines("3m")
-            if df_3m is None or len(df_3m) < 3:
-                print("⚠️ Datos insuficientes 3m")
-                time.sleep(30)
-                continue
-
-            df_3m = vwap_daily(df_3m)
-
+            df_3m = vwap_daily(get_klines("3m"))
             last = df_3m.iloc[-1]
             prev = df_3m.iloc[-2]
-
             price = get_current_price()
-            if price is None:
-                time.sleep(30)
-                continue
 
             rsi_3m = rsi_tv(df_3m["close"]).iloc[-1]
+            rsi_5m = rsi_tv(get_klines("5m")["close"]).iloc[-1]
+            rsi_15m = rsi_tv(get_klines("15m")["close"]).iloc[-1]
+            rsi_1h = rsi_tv(get_klines("1h")["close"]).iloc[-1]
+            rsi_4h = rsi_tv(get_klines("4h")["close"]).iloc[-1]
 
-            print(f"RSI 3m: {rsi_3m:.2f}")
-            print(f"Precio: {price:.2f}")
-            print(f"VWAP: {last['vwap']:.2f}")
+            print(f"{YELLOW}RSI → 4H: {rsi_4h:.2f} | 1H: {rsi_1h:.2f} | 15m: {rsi_15m:.2f} | 5m: {rsi_5m:.2f} | 3m: {rsi_3m:.2f}{RESET}\n")
+            print(f"BTC Actual: {price:.2f}")
+            print(f"VWAP: {last['vwap']:.2f}\n")
 
-            allowed = trading_hours()
+            print(f"{PINK}Upper1 (SH entry): {last['upper1']:.2f}{RESET} | "
+                  f"{RED}Upper2: {last['upper2']:.2f}{RESET} | "
+                  f"{RED}Upper3 (SL Short): {last['upper3']:.2f}{RESET}")
 
-            short_signal = prev["close"] > prev["upper1"] and last["close"] <= last["upper1"]
-            long_signal  = prev["close"] < prev["lower1"] and last["close"] >= last["lower1"]
-
-            if position is None and allowed:
-                if short_signal:
-                    position = "SHORT"
-                    entry_price = last["close"]
-                    send_whatsapp(f"🔴 SHORT BTC\nEntrada: {entry_price:.2f}")
-
-                elif long_signal:
-                    position = "LONG"
-                    entry_price = last["close"]
-                    send_whatsapp(f"🟢 LONG BTC\nEntrada: {entry_price:.2f}")
+            print(f"{CYAN}Lower1 (LG entry): {last['lower1']:.2f}{RESET} | "
+                  f"{GREEN}Lower2: {last['lower2']:.2f}{RESET} | "
+                  f"{GREEN}Lower3 (SL Long): {last['lower3']:.2f}{RESET}")
 
             time.sleep(180)
 
@@ -227,8 +194,16 @@ def run_bot():
             time.sleep(30)
 
 # ==========================================================
-# MAIN
+# FLASK ROUTE
+# ==========================================================
+@app.route("/")
+def home():
+    return "VWAP BOT RUNNING"
+
+# ==========================================================
+# START
 # ==========================================================
 if __name__ == "__main__":
-    threading.Thread(target=run_server).start()
-    threading.Thread(target=run_bot).start()
+    thread = threading.Thread(target=trading_loop)
+    thread.start()
+    app.run(host="0.0.0.0", port=5000)
