@@ -190,7 +190,7 @@ def trading_loop():
             now = dt.now(timezone.utc)
 
             print("\n" + "=" * 60 + "\n")
-            print("PAR:", SYMBOL)
+            print("PAR:", SYMBOL + "\n")
 
             df_3m = vwap_daily(get_klines("3m"))
             last = df_3m.iloc[-1]
@@ -203,8 +203,8 @@ def trading_loop():
             rsi_1h = rsi_tv(get_klines("1h")["close"]).iloc[-1]
             rsi_4h = rsi_tv(get_klines("4h")["close"]).iloc[-1]
 
-            print(f"{YELLOW}RSI → 4H: {rsi_4h:.2f} | 1H: {rsi_1h:.2f} | 15m: {rsi_15m:.2f} | 5m: {rsi_5m:.2f} | 3m: {rsi_3m:.2f}{RESET}\n")
-            print(f"BTC Actual: {price:.2f}")
+            print(f"{YELLOW}RSI 4H: {rsi_4h:.2f} | 1H: {rsi_1h:.2f} | 15m: {rsi_15m:.2f} | 5m: {rsi_5m:.2f} | 3m: {rsi_3m:.2f}{RESET}\n")
+            print(f"BTC Actual: {price:.2f}\n")
             print(f"VWAP: {last['vwap']:.2f}\n")
 
             print(f"{PINK}Upper1 (SH entry): {last['upper1']:.2f}{RESET} | "
@@ -290,7 +290,7 @@ def trading_loop():
             # COUNTDOWN
             # ======================================================
 
-            print(f"\nSiguiente actualización en: {segundos} segundos\n")
+            print(f"\nSiguiente actualización en: 180 segundos\n")
             time.sleep(180)
 
         except Exception as e:
@@ -416,6 +416,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
