@@ -337,33 +337,45 @@ def logs():
     # =========================
     # FORMATEO VWAP ORDENADO
     # =========================
-    vwap_pattern = re.findall(
-        r'(<span style="color:[^"]+;">)([^:]+):\s*([\d\.]+)(</span>)',
-        content
+    # =========================
+# FORMATEO VWAP + BTC ORDENADO
+# =========================
+
+# Captura líneas tipo:
+# <span style="color:...">Etiqueta: 12345.67</span>
+
+pattern = re.findall(
+    r'(<span style="color:[^"]+;">)([^:]+):\s*([\d\.]+)(</span>)',
+    content
+)
+
+levels = []
+
+for start, name, value, end in pattern:
+    try:
+        levels.append({
+            "value": float(value),
+            "html": f"{start}{name}: {value}{end}"
+        })
+    except:
+        pass
+
+# Necesitamos exactamente 8 niveles
+if len(levels) >= 8:
+
+    # Ordenar mayor a menor
+    levels_sorted = sorted(levels, key=lambda x: x["value"], reverse=True)
+
+    # Construir bloque en columna
+    ordered_block = "<br>".join(level["html"] for level in levels_sorted[:8])
+
+    # Reemplazar solo el primer bloque de niveles encontrado
+    content = re.sub(
+        r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d\.]+\s*){8}',
+        ordered_block,
+        content,
+        count=1
     )
-
-    if len(vwap_pattern) >= 7:
-        # Convertir a lista ordenable
-        levels = []
-        for start, name, value, end in vwap_pattern:
-            try:
-                levels.append((float(value), f"{start}{name}: {value}{end}"))
-            except:
-                pass
-
-        # Ordenar mayor a menor
-        levels.sort(reverse=True)
-
-        # Reconstruir bloque ordenado
-        ordered_block = "<br>".join(level[1] for level in levels)
-
-        # Reemplazar bloque original por ordenado
-        content = re.sub(
-            r'(<span style="color:[^"]+;">[^<]+:</span>\s*[\d\.]+\s*)+',
-            ordered_block,
-            content,
-            count=1
-        )
 
     html = f"""
     <html>
@@ -400,6 +412,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
