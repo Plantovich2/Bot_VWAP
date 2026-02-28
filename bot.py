@@ -193,7 +193,7 @@ def trading_loop():
             now = dt.now(timezone.utc)
 
             print("\n" + "=" * 60 + "\n")
-            print(f"{datetime.now(timezone.utc)}")
+            print(f"{dt.now(timezone.utc)}")
             print("PAR:", SYMBOL + "\n")
 
             df_3m = vwap_daily(get_klines("3m"))
@@ -315,6 +315,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
