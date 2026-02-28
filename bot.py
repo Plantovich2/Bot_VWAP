@@ -294,7 +294,10 @@ def trading_loop():
             print(f"Siguiente actualización en: 180 segundos")
             time.sleep(180)
 
-        
+       except Exception as e:
+            print("ERROR:", e)
+            time.sleep(30)
+
 # ==========================================================
 # ROUTES
 # ==========================================================
@@ -337,6 +340,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
