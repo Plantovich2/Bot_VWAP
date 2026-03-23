@@ -218,7 +218,7 @@ def trading_loop():
                     }
                     send_whatsapp(f"🟢 LONG BTC\nEntrada: {price:.2f}")
 
-                elif price > last["upper1"] and rsi_3m > 72.2:
+                elif price > last["upper1"] and rsi_3m > 82.2:
                     position = {
                         "side": "SHORT",
                         "entries": [{"price": price, "size": 200}],
