@@ -86,7 +86,7 @@ def get_klines(interval):
     interval_map = {"3m":"3m","5m":"5m","15m":"15m","1h":"1H","4h":"4H"}
 
     r = requests.get(
-        "https://www.okx.com/api/v5/market/candles",
+        "hts://www.okx.com/api/v5/market/candles",
         params={"instId": SYMBOL, "bar": interval_map[interval], "limit": LIMIT}
     )
 
@@ -257,18 +257,12 @@ def trading_loop():
                     print(f"{YELLOW}TP PARCIAL{RESET}")
                     position["tp_done"] = True
 
-                if any(position["dca_triggered"]) and pnl > 0.3:
-                    send_whatsapp(f"❌ CIERRE LONG (BE)\n{pnl:.2f}%")
-                    position = None
-
-                elif price >= last["upper1"]:
+                
+                elif price >= last["VWAP"]:
                     send_whatsapp(f"❌ CIERRE LONG (TP)\n{pnl:.2f}%")
                     position = None
 
-                elif price <= last["lower3"]:
-                    send_whatsapp(f"❌ CIERRE LONG (SL)\n{pnl:.2f}%")
-                    position = None
-
+                
             # =========================
             # SHORT
             # =========================
@@ -299,18 +293,11 @@ def trading_loop():
                     print(f"{YELLOW}TP PARCIAL{RESET}")
                     position["tp_done"] = True
 
-                if any(position["dca_triggered"]) and pnl > 0.3:
-                    send_whatsapp(f"❌ CIERRE SHORT (BE)\n{pnl:.2f}%")
-                    position = None
-
-                elif price <= last["lower1"]:
+                elif price <= last["VWAP"]:
                     send_whatsapp(f"❌ CIERRE SHORT (TP)\n{pnl:.2f}%")
                     position = None
 
-                elif price >= last["upper3"]:
-                    send_whatsapp(f"❌ CIERRE SHORT (SL)\n{pnl:.2f}%")
-                    position = None
-
+                
             time.sleep(180)
 
         except Exception as e:
