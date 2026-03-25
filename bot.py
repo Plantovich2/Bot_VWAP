@@ -1,6 +1,7 @@
 # ==========================================================
 # BOT entra con RSI 26/82 VWAP calcula banda y manda info al LOG
 # es DCA x3 (1,8 3,4 5,2) avisa banda de VWAP para TP
+# ESTA VERSION ES PARA 30/45 MINUTOS CON DELAY DE VELAS
 # ==========================================================
 # IMPORTS
 # ==========================================================
