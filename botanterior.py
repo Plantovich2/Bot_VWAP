@@ -1,4 +1,9 @@
 # ==========================================================
+# BOT VWAP arranca trabaja entrando y saliendo por bandas 
+# con SL en bandas 3 TP en banda central VWAP
+# en/log se ven todos los RSI y la informacion
+
+# ==========================================================
 # IMPORTS
 # ==========================================================
 import sys
