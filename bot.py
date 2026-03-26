@@ -364,6 +364,9 @@ def logs():
 # START
 # ==========================================================
 if __name__ == "__main__":
+
+    send_whatsapp("Iniciando...")
+    
     t = threading.Thread(target=trading_loop)
     t.daemon = True
     t.start()
