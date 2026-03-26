@@ -4,6 +4,11 @@
 # (se comprobó empíricamente que ese delay mejora el rendimiento) 
 # TP 1,8% 
 # NO USA STOP LOSS
+# IMPORTANTE: ENTRADA 10 USDT 10x
+# DCA1 20 USDT 7x
+# DCA2 40 USDT 5x
+# DCA3 80 USDT 3x
+# SE BANCA HASTA UN -20%
 # Preferentemente usar en grafico de 45 minutos
 # MANDA MSJ WTSPP por TWILIO sobre alertas
 # Monitorea estado cada 3 minutos se puede ver online en /logs
