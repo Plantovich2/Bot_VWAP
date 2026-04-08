@@ -1,28 +1,37 @@
-# ==========================================================
-# TEST BOT - BINANCE + TWILIO
-# Abre posición → espera 30s → cierra → notifica
-# ==========================================================
-
 import time
 import os
 from binance.client import Client
 from twilio.rest import Client as TwilioClient
 
 # ==========================================================
-# CONFIG BINANCE
+# CLIENTE SIN PING (FIX BLOQUEO)
+# ==========================================================
+class NoPingClient(Client):
+    def __init__(self, api_key, api_secret):
+        self.API_KEY = api_key
+        self.API_SECRET = api_secret
+        self.session = self._init_session()
+        self._requests_params = {}
+        self.response = None
+
+        # TESTNET
+        self.API_URL = "https://testnet.binance.vision/api"
+        self.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
+
+# ==========================================================
+# CONFIG
 # ==========================================================
 BINANCE_API_KEY = os.environ.get("BINANCE_API_KEY")
 BINANCE_API_SECRET = os.environ.get("BINANCE_API_SECRET")
 
-binance = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
-binance.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
-
 SYMBOL = "BTCUSDT"
 LEVERAGE = 10
-USDT_SIZE = 20   # 🔥 Ajustado (antes 10)
+USDT_SIZE = 20
+
+binance = NoPingClient(BINANCE_API_KEY, BINANCE_API_SECRET)
 
 # ==========================================================
-# CONFIG TWILIO
+# TWILIO
 # ==========================================================
 ACCOUNT_SID = os.environ.get("ACCOUNT_SID")
 AUTH_TOKEN = os.environ.get("AUTH_TOKEN")
@@ -36,11 +45,7 @@ def send_whatsapp(msg):
         print("[TWILIO OFF]", msg)
         return
     try:
-        twilio.messages.create(
-            body=msg,
-            from_=FROM_WHATSAPP,
-            to=TO_WHATSAPP
-        )
+        twilio.messages.create(body=msg, from_=FROM_WHATSAPP, to=TO_WHATSAPP)
     except Exception as e:
         print("Twilio error:", e)
 
@@ -53,17 +58,13 @@ def get_price():
 def get_qty(usdt):
     price = get_price()
     raw_qty = usdt / price
-
-    # Ajuste step size BTCUSDT
-    step_size = 0.001
-    qty = (raw_qty // step_size) * step_size
-
+    step = 0.001
+    qty = (raw_qty // step) * step
     return round(qty, 3)
 
 def set_leverage():
     try:
         binance.futures_change_leverage(symbol=SYMBOL, leverage=LEVERAGE)
-        print(f"[LEVERAGE] x{LEVERAGE}")
     except Exception as e:
         print("Leverage error:", e)
 
@@ -76,7 +77,7 @@ def open_long():
     price = get_price()
     qty = get_qty(USDT_SIZE)
 
-    print(f"[OPEN] Price: {price} | Qty: {qty}")
+    print("[OPEN]", price, qty)
 
     order = binance.futures_create_order(
         symbol=SYMBOL,
@@ -85,8 +86,6 @@ def open_long():
         quantity=qty
     )
 
-    print("[ORDER OPEN RAW]", order)
-
     time.sleep(1)
 
     status = binance.futures_get_order(
@@ -94,8 +93,7 @@ def open_long():
         orderId=order["orderId"]
     )
 
-    print("[ORDER OPEN STATUS]", status)
-
+    print("[OPEN STATUS]", status)
     return qty, status.get("avgPrice")
 
 def close_position():
@@ -103,11 +101,8 @@ def close_position():
 
     for p in pos:
         amt = float(p["positionAmt"])
-
         if amt != 0:
             side = "SELL" if amt > 0 else "BUY"
-
-            print(f"[CLOSE] Amt: {amt} | Side: {side}")
 
             order = binance.futures_create_order(
                 symbol=SYMBOL,
@@ -117,8 +112,6 @@ def close_position():
                 reduceOnly=True
             )
 
-            print("[ORDER CLOSE RAW]", order)
-
             time.sleep(1)
 
             status = binance.futures_get_order(
@@ -126,8 +119,7 @@ def close_position():
                 orderId=order["orderId"]
             )
 
-            print("[ORDER CLOSE STATUS]", status)
-
+            print("[CLOSE STATUS]", status)
             return status.get("avgPrice")
 
 # ==========================================================
@@ -135,20 +127,16 @@ def close_position():
 # ==========================================================
 if __name__ == "__main__":
 
-    print("\n===== TEST BOT START =====")
+    print("START TEST BOT")
 
-    send_whatsapp("🚀 TEST BOT INICIADO")
+    send_whatsapp("🚀 TEST START")
 
-    # OPEN
     qty, open_price = open_long()
-    send_whatsapp(f"🟢 LONG OPEN\nQty: {qty}\nPrice: {open_price}")
+    send_whatsapp(f"🟢 OPEN\nQty: {qty}\nPrice: {open_price}")
 
-    # WAIT
-    print("⏳ Esperando 30 segundos...")
     time.sleep(30)
 
-    # CLOSE
     close_price = close_position()
-    send_whatsapp(f"❌ POSITION CLOSED\nPrice: {close_price}")
+    send_whatsapp(f"❌ CLOSE\nPrice: {close_price}")
 
-    print("===== TEST BOT END =====")
+    print("END")
