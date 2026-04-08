@@ -175,7 +175,7 @@ RSI_LONG = 26.5
 RSI_SHORT = 82.2
 
 DCA_PERCENTS = [1.6, 3.4, 5.2]
-SIZES = [200, 200, 280, 400]
+SIZES = [200, 280, 400, 480]
 
 TP_PERCENT = 1.8
 
@@ -317,7 +317,7 @@ def trading_loop():
                         "dca_done": [False]*3
                     }
                     send_whatsapp(f"🟢 LONG BTC\nEntrada: {price:.2f}")
-                    open_position("LONG", 10, 10)
+                    open_position("LONG", 20, 10)
 
                 elif enter_short:
                     position = {
@@ -326,7 +326,7 @@ def trading_loop():
                         "dca_done": [False]*3
                     }
                     send_whatsapp(f"🔴 SHORT BTC\nEntrada: {price:.2f}")
-                    open_position("SHORT", 10, 10)
+                    open_position("SHORT", 20, 10)
 
             # LONG
             elif position and position["side"] == "LONG":
@@ -343,17 +343,17 @@ def trading_loop():
                 if not position["dca_done"][0] and close_0 <= dca_prices[0]:
                     position["entries"].append({"price": price, "size": SIZES[1]})
                     position["dca_done"][0] = True
-                    open_position("LONG", 20, 7)
+                    open_position("LONG", 40, 7)
 
                 if not position["dca_done"][1] and close_1 <= dca_prices[1]:
                     position["entries"].append({"price": price, "size": SIZES[2]})
                     position["dca_done"][1] = True
-                    open_position("LONG", 40, 5)
+                    open_position("LONG", 80, 5)
 
                 if not position["dca_done"][2] and close_2 <= dca_prices[2]:
                     position["entries"].append({"price": price, "size": SIZES[3]})
                     position["dca_done"][2] = True
-                    open_position("LONG", 80, 3)
+                    open_position("LONG", 160, 3)
 
                 if price >= avg * (1 + TP_PERCENT/100):
                     close_position()
@@ -374,17 +374,17 @@ def trading_loop():
                 if not position["dca_done"][0] and close_0 >= dca_prices[0]:
                     position["entries"].append({"price": price, "size": SIZES[1]})
                     position["dca_done"][0] = True
-                    open_position("SHORT", 20, 7)
+                    open_position("SHORT", 40, 7)
 
                 if not position["dca_done"][1] and close_1 >= dca_prices[1]:
                     position["entries"].append({"price": price, "size": SIZES[2]})
                     position["dca_done"][1] = True
-                    open_position("SHORT", 40, 5)
+                    open_position("SHORT", 80, 5)
 
                 if not position["dca_done"][2] and close_2 >= dca_prices[2]:
                     position["entries"].append({"price": price, "size": SIZES[3]})
                     position["dca_done"][2] = True
-                    open_position("SHORT", 80, 3)
+                    open_position("SHORT", 160, 3)
 
                 if price <= avg * (1 - TP_PERCENT/100):
                     close_position()
