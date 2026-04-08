@@ -1,18 +1,17 @@
 import time
 import os
-from binance.client import Client
+from binance.client import Client     
 from twilio.rest import Client as TwilioClient
 
 # ==========================================================
 # CLIENTE SIN PING (FIX BLOQUEO)
 # ==========================================================
 class NoPingClient(Client):
-    def __init__(self, api_key, api_secret):
-        self.API_KEY = api_key
-        self.API_SECRET = api_secret
-        self.session = self._init_session()
-        self._requests_params = {}
-        self.response = None
+    def ping(self):
+        return {"msg": "pong"}  # override → no llama a Binance
+binance = NoPingClient(BINANCE_API_KEY, BINANCE_API_SECRET, testnet=True)
+
+binance.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
 
         # TESTNET
         self.API_URL = "https://testnet.binance.vision/api"
