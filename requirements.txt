@@ -1,5 +1,6 @@
-requests
+python-binance
+twilio
 pandas
 numpy
-twilio
-Flask
+requests
+flask
