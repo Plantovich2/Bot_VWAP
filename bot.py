@@ -12,11 +12,7 @@ class NoPingClient(Client):
 binance = NoPingClient(BINANCE_API_KEY, BINANCE_API_SECRET, testnet=True)
 
 binance.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
-
-        # TESTNET
-        self.API_URL = "https://testnet.binance.vision/api"
-        self.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
-
+     
 # ==========================================================
 # CONFIG
 # ==========================================================
