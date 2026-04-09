@@ -9,7 +9,6 @@ from twilio.rest import Client as TwilioClient
 class NoPingClient(Client):
     def ping(self):
         return {"msg": "pong"}  # override → no llama a Binance
-binance = NoPingClient(BINANCE_API_KEY, BINANCE_API_SECRET, testnet=True)
 
 binance.FUTURES_URL = "https://testnet.binancefuture.com/fapi"
      
@@ -23,7 +22,7 @@ SYMBOL = "BTCUSDT"
 LEVERAGE = 10
 USDT_SIZE = 20
 
-binance = NoPingClient(BINANCE_API_KEY, BINANCE_API_SECRET)
+binance = NoPingClient(BINANCE_API_KEY, BINANCE_API_SECRET, testnet=True)
 
 # ==========================================================
 # TWILIO
